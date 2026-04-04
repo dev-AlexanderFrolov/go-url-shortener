@@ -12,3 +12,6 @@ pgdata/
 # 4. Настройки IDE и редакторов
 .vscode/
 .idea/
+
+# 5. Временные файлы Air (Hot Reload)
+tmp/
