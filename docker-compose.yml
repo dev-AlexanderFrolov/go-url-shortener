@@ -22,17 +22,26 @@ services:
       # Точка и слеш (./) означают "создай папку прямо здесь, рядом с docker-compose.yml"
       # - ./pgdata:/var/lib/postgresql/data
 
-  # 2. Наш Go-сервер
+  # 2. Добавляем Redis
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # 3. Наш Go-сервер
   app:
     build: . # Говорим: "Собери образ сам, используя Dockerfile в этой же папке"
     ports:
       - "5001:8080" # Тот самый проброс портов (Port Mapping)
     depends_on:
       - db # Сервер не начнет запускаться, пока не стартанет база
+      - redis # Теперь ждем и базу, и редис
     environment:
       # Передаем нашему Go-коду строку для подключения к БД
       # Заметь: вместо IP-адреса мы используем имя сервиса "db"!
       DATABASE_URL: "postgres://alex:pass@db:5432/shortener_db?sslmode=disable"
+      REDIS_URL: "redis:6379" # Имя сервиса из докера
 
 # это пока закомменчено так как нам нужно увидеть файл бд в директории нашего проекта
 # Объявляем том (Volume) для хранения файлов базы. 
