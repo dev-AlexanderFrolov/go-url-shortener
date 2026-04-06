@@ -9,13 +9,21 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load()
+    _ = godotenv.Load()
 
-	initDB() // Инициализируем базу из repository.go
+    // 1. Инициализируем БД
+    db := InitDB() 
+    defer db.Close() // Best practice: закрыть базу при остановке программы
 
-	http.HandleFunc("POST /api/shorten", ShortenHandler)
-	http.HandleFunc("GET /{id}", RedirectHandler)
+    // 2. Собираем матрешку зависимостей (Dependency Injection)
+    repo := NewRepository(db)       // Репозиторий получает БД
+    service := NewService(repo)     // Сервис получает Репозиторий
+    handler := NewHandler(service)  // Хэндлер получает Сервис
 
-	fmt.Println("🚀 Сервер стартует на порту 8080...")
-	http.ListenAndServe(":8080", nil)
+    // 3. Регистрируем роуты, используя МЕТОДЫ хэндлера
+    http.HandleFunc("POST /api/shorten", handler.ShortenHandler)
+    http.HandleFunc("GET /{id}", handler.RedirectHandler)
+
+    fmt.Println("🚀 Сервер стартует на порту 8080...")
+    http.ListenAndServe(":8080", nil)
 }
